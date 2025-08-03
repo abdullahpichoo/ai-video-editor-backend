@@ -4,10 +4,12 @@ import helmet from "helmet";
 import morgan from "morgan";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 import { config } from "@/config";
 import { errorHandler, notFound } from "@/middleware/error";
 import { authRoutes } from "@/routes/auth";
 import { projectRoutes } from "@/routes/projects";
+import { mediaRoutes } from "@/routes/media-assets";
 
 const app = express();
 
@@ -20,6 +22,7 @@ app.use(
 );
 
 app.use(compression());
+app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -40,6 +43,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/media", mediaRoutes);
 
 app.use(notFound);
 

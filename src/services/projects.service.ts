@@ -1,4 +1,4 @@
-import { VideoProject } from "@/server/models/VideoProject";
+import { VideoProject } from "@/models/VideoProject";
 import { getCollection } from "@/lib/database";
 import { ObjectId } from "mongodb";
 
@@ -12,7 +12,7 @@ export interface CreateProjectRequest {
   fps?: number;
 }
 
-export class ProjectService {
+export class ProjectsService {
   async createProject(
     userId: string,
     data: CreateProjectRequest

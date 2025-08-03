@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import { BaseController } from "./BaseController";
+import { BaseController } from "./base.controller";
 import { getUsersCollection } from "@/lib/database";
 import { generateToken } from "@/lib/jwt";
-import type { CreateUserInput, User } from "@/server/models";
+import type { CreateUserInput, User } from "@/models";
+import { AuthenticatedRequest } from "../types/ApiResponse";
 
 export class AuthController extends BaseController {
   async signup(req: Request, res: Response): Promise<void> {
@@ -22,7 +23,7 @@ export class AuthController extends BaseController {
       }
 
       const users = await getUsersCollection();
-      
+
       const existingUser = await users.findOne({ email });
       if (existingUser) {
         this.conflict(res, "User already exists");
@@ -36,7 +37,7 @@ export class AuthController extends BaseController {
         password: hashedPassword,
         ...(body.name && { name: body.name }),
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       const result = await users.insertOne(newUser);
@@ -46,15 +47,22 @@ export class AuthController extends BaseController {
         email: email,
       });
 
-      this.created(res, { 
+      // Set HTTP-only cookie
+      res.cookie("authToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      });
+
+      this.created(res, {
         message: "User created successfully",
         userId: result.insertedId,
-        token,
         user: {
           id: result.insertedId.toString(),
           email: email,
           name: body.name,
-        }
+        },
       });
     } catch (error) {
       console.error("Signup error:", error);
@@ -91,18 +99,53 @@ export class AuthController extends BaseController {
         email: user.email,
       });
 
+      // Set HTTP-only cookie
+      res.cookie("authToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      });
+
       this.success(res, {
         message: "Login successful",
-        token,
         user: {
           id: user._id?.toString(),
           email: user.email,
           name: user.name,
-        }
+        },
       });
     } catch (error) {
       console.error("Signin error:", error);
       this.error(res, "Internal server error");
     }
+  }
+
+  async logout(req: Request, res: Response): Promise<void> {
+    // Clear the HTTP-only cookie
+    res.clearCookie("authToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    this.success(res, { message: "Logout successful" });
+  }
+
+  async validate(req: Request, res: Response): Promise<void> {
+    const authenticatedReq = req as AuthenticatedRequest;
+    if (!authenticatedReq.userId) {
+      this.unauthorized(res, "User not authenticated");
+      return;
+    }
+
+    this.success(res, {
+      message: "User is authenticated",
+      user: {
+        id: authenticatedReq.userId,
+        email: authenticatedReq.user?.email,
+        name: authenticatedReq.user?.name,
+      },
+    });
   }
 }

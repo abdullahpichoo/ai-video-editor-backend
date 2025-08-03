@@ -14,11 +14,16 @@ export type CollectionName =
 export type MediaType = "video" | "image" | "audio";
 export type VideoFormat = "mp4" | "webm";
 export type ImageFormat = "png" | "jpg" | "jpeg";
+export type AudioFormat = "mp3" | "wav" | "aac" | "mpeg";
 export type SupportedMimeType =
   | "video/mp4"
   | "video/webm"
   | "image/png"
-  | "image/jpeg";
+  | "image/jpeg"
+  | "audio/mpeg"
+  | "audio/wav"
+  | "audio/aac"
+  | "audio/mp3";
 
 // ==================== DATABASE OPERATION TYPES ====================
 export interface CreateUserInput {
@@ -33,13 +38,15 @@ export interface CreateMediaAssetInput {
   filename: string;
   fileSize: number;
   mimeType: SupportedMimeType;
-  storageType: "database" | "temp";
+  storageType: "local" | "vercel-blob";
   storagePath?: string;
-  base64Data?: string;
-  duration?: number;
+
+  // Client-provided metadata (extracted using FFmpeg on client)
+  duration?: number; // in seconds for videos
   dimensions?: { width: number; height: number };
-  fps?: number;
-  hasAudio?: boolean;
+  fps?: number; // for videos
+  hasAudio?: boolean; // for videos
+  thumbnailDataUrl?: string; // base64 thumbnail generated on client
 }
 
 export interface CreateVideoProjectInput {

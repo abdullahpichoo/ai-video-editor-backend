@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "@/lib/jwt";
-import { AuthenticatedRequest } from "@/server/types/ApiResponse";
+import { AuthenticatedRequest } from "@/types/ApiResponse";
 
 export const authenticate = (
   req: Request,
@@ -8,28 +8,20 @@ export const authenticate = (
   next: NextFunction
 ): void => {
   try {
-    const authHeader = req.headers.authorization;
+    let token = req.cookies?.authToken;
 
-    if (!authHeader) {
-      res.status(401).json({
-        success: false,
-        error: {
-          message: "Authorization header is required",
-          code: "MISSING_AUTH_HEADER",
-        },
-      });
-      return;
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.slice(7);
+      }
     }
-
-    const token = authHeader.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : authHeader;
 
     if (!token) {
       res.status(401).json({
         success: false,
         error: {
-          message: "Token is required",
+          message: "Authentication token is required",
           code: "MISSING_TOKEN",
         },
       });

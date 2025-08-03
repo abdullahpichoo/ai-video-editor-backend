@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { ProjectController } from "@/server/controllers/ProjectController";
+import { ProjectController } from "@/controllers/projects.controller";
 import { authenticate } from "@/middleware/auth";
 import { validate } from "@/middleware/validation";
-import { createProjectSchema } from "@/server/validation/schemas";
+import { createProjectSchema } from "./payload-validation/projects.validation";
 
 const router = Router();
 const projectController = new ProjectController();

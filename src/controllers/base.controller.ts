@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { HttpStatusCode } from "@/server/constants/HttpStatusCode";
-import { ApiResponse, AuthenticatedRequest } from "@/server/types/ApiResponse";
+import { HttpStatusCode } from "@/constants/HttpStatusCode";
+import { ApiResponse, AuthenticatedRequest } from "@/types/ApiResponse";
 
 export abstract class BaseController {
   protected getUserId(request: AuthenticatedRequest): string {
@@ -67,10 +67,7 @@ export abstract class BaseController {
     this.error(res, message, HttpStatusCode.UNAUTHORIZED, "UNAUTHORIZED");
   }
 
-  protected forbidden(
-    res: Response,
-    message: string = "Forbidden"
-  ): void {
+  protected forbidden(res: Response, message: string = "Forbidden"): void {
     this.error(res, message, HttpStatusCode.FORBIDDEN, "FORBIDDEN");
   }
 
@@ -81,11 +78,7 @@ export abstract class BaseController {
     this.error(res, message, HttpStatusCode.NOT_FOUND, "NOT_FOUND");
   }
 
-  protected conflict(
-    res: Response,
-    message: string,
-    details?: unknown
-  ): void {
+  protected conflict(res: Response, message: string, details?: unknown): void {
     this.error(res, message, HttpStatusCode.CONFLICT, "CONFLICT", details);
   }
 

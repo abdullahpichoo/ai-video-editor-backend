@@ -8,7 +8,7 @@ import type {
   AIProcessingJob,
   ProjectExport,
   CollectionName,
-} from "@/server/models";
+} from "@/models";
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
@@ -105,8 +105,9 @@ export async function initializeDatabase(): Promise<void> {
     await db
       .collection("mediaAssets")
       .createIndexes([
-        { key: { userId: 1 } },
         { key: { assetId: 1 }, unique: true },
+        { key: { projectId: 1 } },
+        { key: { userId: 1 } },
         { key: { userId: 1, mimeType: 1 } },
         { key: { uploadedAt: -1 } },
         { key: { isProcessing: 1 } },

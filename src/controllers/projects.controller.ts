@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import { BaseController } from "./BaseController";
-import { AuthenticatedRequest } from "@/server/types/ApiResponse";
+import { BaseController } from "./base.controller";
+import { AuthenticatedRequest } from "@/types/ApiResponse";
 import {
-  ProjectService,
+  ProjectsService,
   CreateProjectRequest,
-} from "@/server/services/ProjectService";
+} from "@/services/projects.service";
 
 export class ProjectController extends BaseController {
-  private projectService = new ProjectService();
+  private projectService = new ProjectsService();
 
   async createProject(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
