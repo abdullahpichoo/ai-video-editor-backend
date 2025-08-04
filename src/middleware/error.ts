@@ -1,23 +1,14 @@
 import { Request, Response, NextFunction } from "express";
-import { ApiResponse } from "@/types/ApiResponse";
+import { ApiResponse } from "@/types/api-response";
 
 export class AppError extends Error {
-  constructor(
-    public override message: string,
-    public statusCode: number = 500,
-    public code?: string
-  ) {
+  constructor(public override message: string, public statusCode: number = 500, public code?: string) {
     super(message);
     this.name = "AppError";
   }
 }
 
-export const errorHandler = (
-  error: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const errorHandler = (error: Error, req: Request, res: Response, next: NextFunction): void => {
   console.error("Error:", error);
 
   let statusCode = 500;

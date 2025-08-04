@@ -1,17 +1,13 @@
 import { Response } from "express";
 import { HttpStatusCode } from "@/constants/HttpStatusCode";
-import { ApiResponse, AuthenticatedRequest } from "@/types/ApiResponse";
+import { ApiResponse, AuthenticatedRequest } from "@/types/api-response";
 
 export abstract class BaseController {
   protected getUserId(request: AuthenticatedRequest): string {
     return request.userId;
   }
 
-  protected success<T>(
-    res: Response,
-    data: T,
-    statusCode: HttpStatusCode = HttpStatusCode.OK
-  ): void {
+  protected success<T>(res: Response, data: T, statusCode: HttpStatusCode = HttpStatusCode.OK): void {
     res.status(statusCode).json({
       success: true,
       data,
@@ -46,24 +42,11 @@ export abstract class BaseController {
     });
   }
 
-  protected badRequest(
-    res: Response,
-    message: string,
-    details?: unknown
-  ): void {
-    this.error(
-      res,
-      message,
-      HttpStatusCode.BAD_REQUEST,
-      "BAD_REQUEST",
-      details
-    );
+  protected badRequest(res: Response, message: string, details?: unknown): void {
+    this.error(res, message, HttpStatusCode.BAD_REQUEST, "BAD_REQUEST", details);
   }
 
-  protected unauthorized(
-    res: Response,
-    message: string = "Unauthorized"
-  ): void {
+  protected unauthorized(res: Response, message: string = "Unauthorized"): void {
     this.error(res, message, HttpStatusCode.UNAUTHORIZED, "UNAUTHORIZED");
   }
 
@@ -71,10 +54,7 @@ export abstract class BaseController {
     this.error(res, message, HttpStatusCode.FORBIDDEN, "FORBIDDEN");
   }
 
-  protected notFound(
-    res: Response,
-    message: string = "Resource not found"
-  ): void {
+  protected notFound(res: Response, message: string = "Resource not found"): void {
     this.error(res, message, HttpStatusCode.NOT_FOUND, "NOT_FOUND");
   }
 
@@ -82,17 +62,7 @@ export abstract class BaseController {
     this.error(res, message, HttpStatusCode.CONFLICT, "CONFLICT", details);
   }
 
-  protected validationError(
-    res: Response,
-    message: string,
-    details?: unknown
-  ): void {
-    this.error(
-      res,
-      message,
-      HttpStatusCode.UNPROCESSABLE_ENTITY,
-      "VALIDATION_ERROR",
-      details
-    );
+  protected validationError(res: Response, message: string, details?: unknown): void {
+    this.error(res, message, HttpStatusCode.UNPROCESSABLE_ENTITY, "VALIDATION_ERROR", details);
   }
 }

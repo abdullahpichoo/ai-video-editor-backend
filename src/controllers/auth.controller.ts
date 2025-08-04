@@ -1,16 +1,12 @@
 import { Request, Response } from "express";
 import { BaseController } from "./base.controller";
-import { AuthService, SignupRequest, SigninRequest } from "@/services/auth.service";
+import { AuthService } from "@/services/auth.service";
 import { signupSchema, signinSchema } from "@/routes/payload-validation/auth.validation";
-import { AuthenticatedRequest } from "@/types/ApiResponse";
+import { AuthenticatedRequest } from "@/types/api-response";
+import { SigninRequest, SignupRequest } from "@/types/auth";
 
 export class AuthController extends BaseController {
-  private authService: AuthService;
-
-  constructor() {
-    super();
-    this.authService = new AuthService();
-  }
+  private authService = new AuthService();
 
   async signup(req: Request, res: Response): Promise<void> {
     try {

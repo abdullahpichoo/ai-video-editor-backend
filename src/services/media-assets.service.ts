@@ -1,81 +1,12 @@
-import { MediaAsset, CreateMediaAssetInput, MediaAssetFilter } from "@/models";
 import { getMediaAssetsCollection } from "@/lib/database";
 import { promises as fs } from "fs";
 import path from "path";
 import { config } from "@/config";
 import { del, put } from "@vercel/blob";
-
-export interface UploadMediaRequest {
-  originalName: string;
-  mimeType: string;
-  fileSize: number;
-  duration?: number;
-  dimensions?: { width: number; height: number };
-  fps?: number;
-  hasAudio?: boolean;
-  thumbnailDataUrl?: string;
-}
+import { MediaAsset } from "@/models";
+import { UploadMediaRequest } from "@/types/media-assets";
 
 export class MediaAssetsService {
-  private getStorageConfig() {
-    return {
-      isProduction: config.nodeEnv === "production",
-      uploadsDir: path.join(process.cwd(), "uploads"),
-      thumbnailsDir: path.join(process.cwd(), "uploads", "thumbnails"),
-    };
-  }
-
-  private getAssetType(mimeType: string): "video" | "image" | "audio" {
-    if (mimeType.startsWith("video/")) {
-      return "video";
-    } else if (mimeType.startsWith("image/")) {
-      return "image";
-    } else if (mimeType.startsWith("audio/")) {
-      return "audio";
-    } else {
-      return "image";
-    }
-  }
-
-  private async ensureDirectoriesExist(): Promise<void> {
-    const { uploadsDir, thumbnailsDir } = this.getStorageConfig();
-
-    try {
-      await fs.mkdir(uploadsDir, { recursive: true });
-      await fs.mkdir(thumbnailsDir, { recursive: true });
-    } catch (error) {
-      console.error("Failed to create upload directories:", error);
-      throw new Error("Failed to initialize storage directories");
-    }
-  }
-
-  private generateUniqueFilename(originalName: string): string {
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 15);
-    const extension = path.extname(originalName);
-    const baseName = path.basename(originalName, extension);
-
-    return `${baseName}-${timestamp}-${randomString}${extension}`;
-  }
-
-  private async saveThumbnail(thumbnailDataUrl: string, assetId: string): Promise<string> {
-    const { thumbnailsDir } = this.getStorageConfig();
-
-    const matches = thumbnailDataUrl.match(/^data:image\/([a-z]+);base64,(.+)$/);
-    if (!matches || !matches[2]) {
-      throw new Error("Invalid thumbnail data URL format");
-    }
-
-    const [, extension, base64Data] = matches;
-    const thumbnailFilename = `${assetId}-thumbnail.${extension}`;
-    const thumbnailPath = path.join(thumbnailsDir, thumbnailFilename);
-
-    const buffer = Buffer.from(base64Data, "base64");
-    await fs.writeFile(thumbnailPath, buffer);
-
-    return path.join("thumbnails", thumbnailFilename);
-  }
-
   async createMediaAsset(
     userId: string,
     projectId: string,
@@ -87,12 +18,9 @@ export class MediaAssetsService {
       size: number;
     }
   ): Promise<MediaAsset> {
-    await this.ensureDirectoriesExist();
-
     const collection = await getMediaAssetsCollection();
     const assetId = crypto.randomUUID();
     const filename = this.generateUniqueFilename(uploadData.originalName);
-    const { uploadsDir, isProduction } = this.getStorageConfig();
 
     let storagePath: string;
     let thumbnailPath: string | undefined;
@@ -106,11 +34,6 @@ export class MediaAssetsService {
     } catch (error) {
       console.error("Failed to upload file to Vercel Blob:", error);
       throw new Error("Failed to upload file to storage");
-    }
-
-    // Save thumbnail if provided
-    if (uploadData.thumbnailDataUrl) {
-      thumbnailPath = await this.saveThumbnail(uploadData.thumbnailDataUrl, assetId);
     }
 
     const mediaAsset: Omit<MediaAsset, "_id"> = {
@@ -153,28 +76,12 @@ export class MediaAssetsService {
     return await collection.find({ projectId }).sort({ uploadedAt: -1 }).toArray();
   }
 
-  async getUserMediaAssets(userId: string, filter?: Partial<MediaAssetFilter>): Promise<MediaAsset[]> {
+  async deleteProjectAssets(projectId: string): Promise<void> {
     const collection = await getMediaAssetsCollection();
-
-    const query: any = { userId };
-
-    if (filter?.mimeType && filter.mimeType.length > 0) {
-      query.mimeType = { $in: filter.mimeType };
-    }
-
-    if (filter?.isProcessing !== undefined) {
-      query.isProcessing = filter.isProcessing;
-    }
-
-    if (filter?.uploadedAfter) {
-      query.uploadedAt = { ...query.uploadedAt, $gte: filter.uploadedAfter };
-    }
-
-    if (filter?.uploadedBefore) {
-      query.uploadedAt = { ...query.uploadedAt, $lte: filter.uploadedBefore };
-    }
-
-    return await collection.find(query).sort({ uploadedAt: -1 }).toArray();
+    const assets = await collection.find({ projectId }).toArray();
+    const deletePromises = assets.map((asset) => this.deleteMediaAsset(asset.assetId, asset.userId));
+    await Promise.allSettled(deletePromises);
+    await collection.deleteMany({ projectId });
   }
 
   async deleteMediaAsset(assetId: string, userId: string): Promise<boolean> {
@@ -195,25 +102,24 @@ export class MediaAssetsService {
     return result.deletedCount > 0;
   }
 
-  async updateAssetProcessingStatus(
-    assetId: string,
-    userId: string,
-    isProcessing: boolean,
-    processingError?: string
-  ): Promise<boolean> {
-    const collection = await getMediaAssetsCollection();
-
-    const updateData: any = {
-      isProcessing,
-      updatedAt: new Date(),
-    };
-
-    if (processingError !== undefined) {
-      updateData.processingError = processingError;
+  private getAssetType(mimeType: string): "video" | "image" | "audio" {
+    if (mimeType.startsWith("video/")) {
+      return "video";
+    } else if (mimeType.startsWith("image/")) {
+      return "image";
+    } else if (mimeType.startsWith("audio/")) {
+      return "audio";
+    } else {
+      return "image";
     }
+  }
 
-    const result = await collection.updateOne({ assetId, userId }, { $set: updateData });
+  private generateUniqueFilename(originalName: string): string {
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
+    const extension = path.extname(originalName);
+    const baseName = path.basename(originalName, extension);
 
-    return result.modifiedCount > 0;
+    return `${baseName}-${timestamp}-${randomString}${extension}`;
   }
 }

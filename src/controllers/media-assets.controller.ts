@@ -1,15 +1,16 @@
 import { Request, Response } from "express";
 import { BaseController } from "./base.controller";
-import { MediaAssetsService, UploadMediaRequest } from "@/services/media-assets.service";
+import { MediaAssetsService } from "@/services/media-assets.service";
 import {
   uploadMediaSchema,
   FILE_SIZE_LIMITS,
   getMaxFileSize,
 } from "@/routes/payload-validation/media-assets.validation";
-import { AuthenticatedRequest } from "@/types/ApiResponse";
+import { AuthenticatedRequest } from "@/types/api-response";
 import multer from "multer";
 import path from "path";
 import { MediaAssetTransformer } from "@/tranformers/media-assets";
+import { UploadMediaRequest } from "@/types/media-assets";
 
 const storage = multer.memoryStorage();
 
@@ -65,7 +66,6 @@ export class MediaController extends BaseController {
         return;
       }
 
-      console.log("Uploaded file:", req.file);
       let metadata: UploadMediaRequest;
       try {
         const requestData: UploadMediaRequest = {
@@ -77,12 +77,10 @@ export class MediaController extends BaseController {
           fps: req.body.fps && parseFloat(req.body.fps),
           hasAudio: req.body.hasAudio && JSON.parse(req.body.hasAudio),
         };
-        console.log("Request data for upload:", requestData);
 
         const validatedData = uploadMediaSchema.parse(requestData);
         metadata = validatedData as UploadMediaRequest;
       } catch (error) {
-        console.error("Validation error:", error);
         if (error instanceof Error) {
           if (error.name === "ZodError") {
             const zodError = error as any;
@@ -107,8 +105,6 @@ export class MediaController extends BaseController {
         asset: MediaAssetTransformer.transform(mediaAsset),
       });
     } catch (error) {
-      console.error("Upload asset error:", error);
-
       if (error instanceof Error) {
         // Handle multer errors
         if (error.message.includes("file size")) {
@@ -198,59 +194,6 @@ export class MediaController extends BaseController {
     }
   }
 
-  async getUserAssets(req: Request, res: Response): Promise<void> {
-    try {
-      const authReq = req as AuthenticatedRequest;
-      const userId = authReq.userId;
-
-      // Parse query parameters for filtering
-      const { mimeType, isProcessing, uploadedAfter, uploadedBefore } = req.query;
-
-      const filter: any = {};
-
-      if (mimeType) {
-        filter.mimeType = Array.isArray(mimeType) ? mimeType : [mimeType];
-      }
-
-      if (isProcessing !== undefined) {
-        filter.isProcessing = isProcessing === "true";
-      }
-
-      if (uploadedAfter) {
-        filter.uploadedAfter = new Date(uploadedAfter as string);
-      }
-
-      if (uploadedBefore) {
-        filter.uploadedBefore = new Date(uploadedBefore as string);
-      }
-
-      const assets = await this.mediaService.getUserMediaAssets(userId, filter);
-
-      this.success(res, {
-        assets: assets.map((asset) => ({
-          id: asset.assetId,
-          originalName: asset.originalName,
-          filename: asset.filename,
-          mimeType: asset.mimeType,
-          fileSize: asset.fileSize,
-          duration: asset.duration,
-          dimensions: asset.dimensions,
-          fps: asset.fps,
-          hasAudio: asset.hasAudio,
-          thumbnailPath: asset.thumbnailPath,
-          isProcessing: asset.isProcessing,
-          processingError: asset.processingError,
-          uploadedAt: asset.uploadedAt,
-          updatedAt: asset.updatedAt,
-        })),
-        totalCount: assets.length,
-      });
-    } catch (error) {
-      console.error("Get user assets error:", error);
-      this.error(res, "Failed to retrieve media assets");
-    }
-  }
-
   async deleteAsset(req: Request, res: Response): Promise<void> {
     try {
       const authReq = req as AuthenticatedRequest;
@@ -275,59 +218,6 @@ export class MediaController extends BaseController {
     } catch (error) {
       console.error("Delete asset error:", error);
       this.error(res, "Failed to delete media asset");
-    }
-  }
-
-  async serveAsset(req: Request, res: Response): Promise<void> {
-    try {
-      const authReq = req as AuthenticatedRequest;
-      const userId = authReq.userId;
-      const { assetId } = req.params;
-
-      if (!assetId) {
-        this.badRequest(res, "Asset ID is required");
-        return;
-      }
-
-      const asset = await this.mediaService.getMediaAsset(assetId, userId);
-
-      if (!asset) {
-        this.notFound(res, "Media asset not found");
-        return;
-      }
-
-      if (asset.storageType !== "local") {
-        this.badRequest(res, "Asset streaming not available for this storage type");
-        return;
-      }
-
-      const filePath = path.join(process.cwd(), asset.storagePath);
-
-      // Set appropriate headers
-      res.setHeader("Content-Type", asset.mimeType);
-      res.setHeader("Content-Length", asset.fileSize);
-
-      // For videos, support range requests
-      if (asset.mimeType.startsWith("video/")) {
-        res.setHeader("Accept-Ranges", "bytes");
-
-        const range = req.headers.range;
-        if (range) {
-          const parts = range.replace(/bytes=/, "").split("-");
-          const start = parseInt(parts[0] || "0", 10);
-          const end = parts[1] ? parseInt(parts[1], 10) : asset.fileSize - 1;
-          const chunksize = end - start + 1;
-
-          res.status(206);
-          res.setHeader("Content-Range", `bytes ${start}-${end}/${asset.fileSize}`);
-          res.setHeader("Content-Length", chunksize);
-        }
-      }
-
-      res.sendFile(filePath);
-    } catch (error) {
-      console.error("Serve asset error:", error);
-      this.error(res, "Failed to serve media asset");
     }
   }
 }

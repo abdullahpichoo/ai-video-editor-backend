@@ -1,17 +1,12 @@
 import { Collection, ObjectId } from "mongodb";
 import { ITimeline, ITimelineTrack, ITimelineClip } from "@/models/Timeline";
 import { getTimelinesCollection } from "@/lib/database";
-
-export interface UpdateTimelineRequest {
-  id: string;
-  duration: number;
-  tracks: ITimelineTrack[];
-}
+import { UpdateTimelineRequest } from "@/types/timeline";
 
 export class TimelineService {
-  async getTimeline(projectId: string, userId: string): Promise<ITimeline | null> {
+  async getTimeline(projectId: string): Promise<ITimeline | null> {
     const collection = await getTimelinesCollection();
-    return await collection.findOne({ projectId, userId });
+    return await collection.findOne({ projectId });
   }
 
   async updateTimeline(projectId: string, userId: string, timelineData: UpdateTimelineRequest): Promise<ITimeline> {
@@ -23,6 +18,11 @@ export class TimelineService {
     }
 
     return this.createNewTimeline(collection, projectId, userId, timelineData);
+  }
+
+  async deleteTimeline(projectId: string): Promise<void> {
+    const collection = await getTimelinesCollection();
+    await collection.deleteOne({ projectId });
   }
 
   private async updateExistingTimeline(

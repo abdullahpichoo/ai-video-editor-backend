@@ -9,8 +9,9 @@ const projectController = new ProjectController();
 
 router.use(authenticate);
 
-router.post("/projects", validate(createProjectSchema), (req, res) => projectController.createProject(req as any, res));
-router.get("/projects", (req, res) => projectController.listProjects(req as any, res));
-router.get("/projects/:id", (req, res) => projectController.getProject(req as any, res));
+router.post("/projects", validate(createProjectSchema), projectController.createProject.bind(projectController));
+router.get("/projects", projectController.listProjects.bind(projectController));
+router.get("/projects/:projectId", projectController.getProject.bind(projectController));
+router.delete("/projects/:projectId", projectController.deleteProject.bind(projectController));
 
 export { router as projectRoutes };

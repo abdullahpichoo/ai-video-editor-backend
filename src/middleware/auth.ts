@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "@/lib/jwt";
-import { AuthenticatedRequest } from "@/types/ApiResponse";
+import { AuthenticatedRequest } from "@/types/api-response";
 
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   try {

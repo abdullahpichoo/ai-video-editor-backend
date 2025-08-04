@@ -1,14 +1,6 @@
 import { MongoClient, Db, Collection, Document } from "mongodb";
 import { config } from "@/config";
-import type {
-  User,
-  UserSession,
-  MediaAsset,
-  VideoProject,
-  AIProcessingJob,
-  ProjectExport,
-  CollectionName,
-} from "@/models";
+import type { User, MediaAsset, VideoProject, CollectionName } from "@/models";
 import type { ITimeline } from "@/models/Timeline";
 
 let client: MongoClient | null = null;
@@ -52,24 +44,12 @@ export async function getUsersCollection(): Promise<Collection<User>> {
   return getCollection<User>("users");
 }
 
-export async function getUserSessionsCollection(): Promise<Collection<UserSession>> {
-  return getCollection<UserSession>("userSessions");
-}
-
 export async function getMediaAssetsCollection(): Promise<Collection<MediaAsset>> {
   return getCollection<MediaAsset>("mediaAssets");
 }
 
 export async function getVideoProjectsCollection(): Promise<Collection<VideoProject>> {
   return getCollection<VideoProject>("videoProjects");
-}
-
-export async function getAIProcessingJobsCollection(): Promise<Collection<AIProcessingJob>> {
-  return getCollection<AIProcessingJob>("aiProcessingJobs");
-}
-
-export async function getProjectExportsCollection(): Promise<Collection<ProjectExport>> {
-  return getCollection<ProjectExport>("projectExports");
 }
 
 export async function getTimelinesCollection(): Promise<Collection<ITimeline>> {

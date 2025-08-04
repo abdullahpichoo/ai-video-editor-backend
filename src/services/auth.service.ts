@@ -1,29 +1,9 @@
 import bcrypt from "bcryptjs";
-import { ObjectId } from "mongodb";
 import { getUsersCollection } from "@/lib/database";
 import { generateToken } from "@/lib/jwt";
 import { User } from "@/models";
 import { config } from "@/config";
-
-export interface SignupRequest {
-  email: string;
-  password: string;
-  name?: string;
-}
-
-export interface SigninRequest {
-  email: string;
-  password: string;
-}
-
-export interface AuthResult {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    name?: string;
-  };
-}
+import { AuthResult, SigninRequest, SignupRequest } from "@/types/auth";
 
 const USER_ALREADY_EXISTS = "User already exists";
 const INVALID_CREDENTIALS = "Invalid credentials";

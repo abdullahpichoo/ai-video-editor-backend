@@ -1,104 +1,80 @@
+import { MediaAssetsService } from "@/services/media-assets.service";
 import { VideoProject } from "@/models/VideoProject";
-import { getCollection } from "@/lib/database";
+import { getVideoProjectsCollection } from "@/lib/database";
 import { ObjectId } from "mongodb";
+import { TimelineService } from "./timeline.service";
+import { CreateProjectRequest } from "@/types/project";
 
-export interface CreateProjectRequest {
-  title: string;
-  description?: string;
-  resolution: {
-    width: number;
-    height: number;
-  };
-  fps?: number;
-}
+const PROJECT_NOT_FOUND = "Project not found";
 
 export class ProjectsService {
-  async createProject(
-    userId: string,
-    data: CreateProjectRequest
-  ): Promise<VideoProject> {
+  async createProject(userId: string, data: CreateProjectRequest): Promise<VideoProject> {
+    const collection = await getVideoProjectsCollection();
+
+    const project: Omit<VideoProject, "_id"> = {
+      userId,
+      title: data.title,
+      ...(data.description && { description: data.description }),
+      resolution: data.resolution,
+      ...(data.fps && { fps: data.fps }),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastOpenedAt: new Date(),
+    };
+
+    const result = await collection.insertOne(project as VideoProject);
+    return { ...project, _id: result.insertedId } as VideoProject;
+  }
+
+  async getUserProjects(userId: string): Promise<VideoProject[]> {
+    const collection = await getVideoProjectsCollection();
+
+    return await collection.find({ userId }).sort({ updatedAt: -1 }).toArray();
+  }
+
+  async getProject(projectId: string): Promise<VideoProject | null> {
+    const collection = await getVideoProjectsCollection();
+
+    const project = await collection.findOne({
+      _id: new ObjectId(projectId),
+    });
+
+    return project;
+  }
+
+  async deleteProject(projectId: string): Promise<void> {
+    const collection = await getVideoProjectsCollection();
+
+    const project = await this.getProject(projectId);
+    if (!project) {
+      throw new Error(PROJECT_NOT_FOUND);
+    }
+
+    if (!project._id) {
+      throw new Error("Invalid project ID");
+    }
+
+    await this.deleteProjectAssets(projectId);
+    await this.deleteProjectTimeline(projectId);
+
+    await collection.deleteOne({ _id: project._id });
+  }
+
+  private async deleteProjectAssets(projectId: string): Promise<void> {
     try {
-      const collection = await getCollection<VideoProject>("videoProjects");
-
-      const project: Omit<VideoProject, "_id"> = {
-        userId,
-        projectId: crypto.randomUUID(),
-        title: data.title,
-        ...(data.description && { description: data.description }),
-        timelineSettings: {
-          duration: 0,
-          resolution: data.resolution,
-          fps: data.fps || 30,
-        },
-        mediaAssets: [],
-        tracks: [],
-        subtitles: [],
-        lastPlaybackPosition: 0,
-        exportSettings: {
-          format: "mp4",
-          quality: "high",
-          resolution: data.resolution,
-          fps: data.fps || 30,
-          includeAudio: true,
-        },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        lastOpenedAt: new Date(),
-      };
-
-      const result = await collection.insertOne(project as VideoProject);
-
-      const createdProject = await collection.findOne({
-        _id: result.insertedId,
-      });
-
-      if (!createdProject) throw new Error("Failed to create project");
-
-      return createdProject;
+      const mediaAssetsService = new MediaAssetsService();
+      await mediaAssetsService.deleteProjectAssets(projectId);
     } catch (error) {
-      console.error("Error getting video projects collection:", error);
-      throw new Error("Failed to access video projects collection");
+      console.error("Error deleting project assets:", error);
     }
   }
 
-  async getUserProjects(userId: string, page: number = 1, limit: number = 10) {
-    const collection = await getCollection<VideoProject>("videoProjects");
-
-    const skip = (page - 1) * limit;
-    const filter = { userId };
-
-    const [projects, total] = await Promise.all([
-      collection
-        .find(filter)
-        .sort({ updatedAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .toArray(),
-      collection.countDocuments(filter),
-    ]);
-
-    return {
-      projects,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
-
-  async getProjectById(
-    projectId: string,
-    userId: string
-  ): Promise<VideoProject | null> {
-    const collection = await getCollection<VideoProject>("videoProjects");
-
-    return await collection.findOne({
-      $or: [
-        { projectId, userId },
-        { _id: new ObjectId(projectId), userId },
-      ],
-    });
+  private async deleteProjectTimeline(projectId: string): Promise<void> {
+    try {
+      const timelineService = new TimelineService();
+      await timelineService.deleteTimeline(projectId);
+    } catch (error) {
+      console.error("Error deleting project timeline:", error);
+    }
   }
 }
