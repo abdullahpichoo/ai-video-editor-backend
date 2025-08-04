@@ -7,6 +7,7 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:prod": "NODE_ENV=production node dist/index.js",
     "lint": "eslint src/**/*.ts",
     "test": "jest"
   },
@@ -24,6 +25,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "lru-cache": "^11.1.0",
+    "module-alias": "^2.2.3",
     "mongodb": "^6.18.0",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
@@ -52,6 +54,9 @@
     "supertest": "^6.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
+  },
+  "_moduleAliases": {
+    "@": "dist"
   },
   "keywords": [
     "video-editor",

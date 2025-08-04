@@ -1,3 +1,4 @@
+import "module-alias/register";
 import { app } from "./app";
 import { config } from "@/config";
 import { initializeDatabase, checkDatabaseHealth } from "@/lib/database";
@@ -24,13 +25,9 @@ const startServer = async (): Promise<void> => {
       console.log(`🌐 CORS Origin: ${config.cors.origin}`);
 
       if (config.nodeEnv === "development") {
-        console.log(
-          `🔍 API Health Check: http://localhost:${config.port}/health`
-        );
+        console.log(`🔍 API Health Check: http://localhost:${config.port}/health`);
         console.log(`🔐 Auth API: http://localhost:${config.port}/api/auth`);
-        console.log(
-          `📁 Projects API: http://localhost:${config.port}/api/projects`
-        );
+        console.log(`📁 Projects API: http://localhost:${config.port}/api/projects`);
       }
     });
   } catch (error) {
