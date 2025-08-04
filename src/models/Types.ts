@@ -1,6 +1,6 @@
-import { TimelineTrack } from "./Timeline";
 import { SubtitleItem } from "./Subtitle";
 import { ExportSettings } from "./ExportSettings";
+import { ITimelineTrack } from "./Timeline";
 
 // ==================== TYPE UNIONS AND HELPERS ====================
 export type CollectionName =
@@ -9,7 +9,8 @@ export type CollectionName =
   | "mediaAssets"
   | "videoProjects"
   | "aiProcessingJobs"
-  | "projectExports";
+  | "projectExports"
+  | "timelines";
 
 export type MediaType = "video" | "image" | "audio";
 export type VideoFormat = "mp4" | "webm";
@@ -68,7 +69,7 @@ export interface UpdateProjectInput {
     resolution?: { width: number; height: number };
     fps?: number;
   };
-  tracks?: TimelineTrack[];
+  tracks?: ITimelineTrack[];
   subtitles?: SubtitleItem[];
   lastPlaybackPosition?: number;
   exportSettings?: ExportSettings;

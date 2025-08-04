@@ -9,6 +9,7 @@ import type {
   ProjectExport,
   CollectionName,
 } from "@/models";
+import type { ITimeline } from "@/models/Timeline";
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
@@ -42,9 +43,7 @@ export async function connectToDatabase(): Promise<{
   }
 }
 
-export async function getCollection<T extends Document>(
-  collectionName: CollectionName
-): Promise<Collection<T>> {
+export async function getCollection<T extends Document>(collectionName: CollectionName): Promise<Collection<T>> {
   const { db } = await connectToDatabase();
   return db.collection<T>(collectionName);
 }
@@ -53,46 +52,35 @@ export async function getUsersCollection(): Promise<Collection<User>> {
   return getCollection<User>("users");
 }
 
-export async function getUserSessionsCollection(): Promise<
-  Collection<UserSession>
-> {
+export async function getUserSessionsCollection(): Promise<Collection<UserSession>> {
   return getCollection<UserSession>("userSessions");
 }
 
-export async function getMediaAssetsCollection(): Promise<
-  Collection<MediaAsset>
-> {
+export async function getMediaAssetsCollection(): Promise<Collection<MediaAsset>> {
   return getCollection<MediaAsset>("mediaAssets");
 }
 
-export async function getVideoProjectsCollection(): Promise<
-  Collection<VideoProject>
-> {
+export async function getVideoProjectsCollection(): Promise<Collection<VideoProject>> {
   return getCollection<VideoProject>("videoProjects");
 }
 
-export async function getAIProcessingJobsCollection(): Promise<
-  Collection<AIProcessingJob>
-> {
+export async function getAIProcessingJobsCollection(): Promise<Collection<AIProcessingJob>> {
   return getCollection<AIProcessingJob>("aiProcessingJobs");
 }
 
-export async function getProjectExportsCollection(): Promise<
-  Collection<ProjectExport>
-> {
+export async function getProjectExportsCollection(): Promise<Collection<ProjectExport>> {
   return getCollection<ProjectExport>("projectExports");
+}
+
+export async function getTimelinesCollection(): Promise<Collection<ITimeline>> {
+  return getCollection<ITimeline>("timelines");
 }
 
 export async function initializeDatabase(): Promise<void> {
   try {
     const { db } = await connectToDatabase();
 
-    await db
-      .collection("users")
-      .createIndexes([
-        { key: { email: 1 }, unique: true },
-        { key: { createdAt: 1 } },
-      ]);
+    await db.collection("users").createIndexes([{ key: { email: 1 }, unique: true }, { key: { createdAt: 1 } }]);
 
     await db
       .collection("userSessions")

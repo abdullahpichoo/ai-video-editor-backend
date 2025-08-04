@@ -10,6 +10,7 @@ import { errorHandler, notFound } from "@/middleware/error";
 import { authRoutes } from "@/routes/auth";
 import { projectRoutes } from "@/routes/projects";
 import { mediaRoutes } from "@/routes/media-assets";
+import timelineRoutes from "@/routes/timeline";
 
 const app = express();
 
@@ -41,9 +42,10 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/projects", projectRoutes);
-app.use("/api/media", mediaRoutes);
+app.use("/api", authRoutes);
+app.use("/api", projectRoutes);
+app.use("/api", mediaRoutes);
+app.use("/api", timelineRoutes);
 
 app.use(notFound);
 

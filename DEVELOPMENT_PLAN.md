@@ -7,7 +7,7 @@
 - [ ] Create MediaAsset model with fields: id, filename, originalName, type, size, duration, dimensions, thumbnailPath, userId, projectId, createdAt
 - [ ] Build MediaController with upload endpoint `/api/media/upload`
 - [ ] Add file validation (MP4, WebM for videos; PNG, JPG for images)
-- [ ] Implement file storage in `/uploads` directory with organized folder structure
+- [ ] Upload to local file storage if local dev env, and upload to Vercel Blob storage if production.
 - [ ] Use `multer` for handling multipart file uploads
 - [ ] Use `ffprobe` to extract video metadata (duration, resolution, fps)
 - [ ] Generate video thumbnails using `ffmpeg` (multiple frames for timeline scrubbing)

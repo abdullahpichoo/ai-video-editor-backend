@@ -3,6 +3,7 @@ import { getMediaAssetsCollection } from "@/lib/database";
 import { promises as fs } from "fs";
 import path from "path";
 import { config } from "@/config";
+import { del, put } from "@vercel/blob";
 
 export interface UploadMediaRequest {
   originalName: string;
@@ -57,16 +58,10 @@ export class MediaAssetsService {
     return `${baseName}-${timestamp}-${randomString}${extension}`;
   }
 
-  private async saveThumbnail(
-    thumbnailDataUrl: string,
-    assetId: string
-  ): Promise<string> {
+  private async saveThumbnail(thumbnailDataUrl: string, assetId: string): Promise<string> {
     const { thumbnailsDir } = this.getStorageConfig();
 
-    // Extract base64 data from data URL
-    const matches = thumbnailDataUrl.match(
-      /^data:image\/([a-z]+);base64,(.+)$/
-    );
+    const matches = thumbnailDataUrl.match(/^data:image\/([a-z]+);base64,(.+)$/);
     if (!matches || !matches[2]) {
       throw new Error("Invalid thumbnail data URL format");
     }
@@ -102,22 +97,20 @@ export class MediaAssetsService {
     let storagePath: string;
     let thumbnailPath: string | undefined;
 
-    if (isProduction) {
-      // TODO: Implement Vercel Blob storage for production
-      throw new Error("Vercel Blob storage not yet implemented");
-    } else {
-      // Local storage for development
-      const filePath = path.join(uploadsDir, filename);
-      await fs.writeFile(filePath, file.buffer);
-      storagePath = path.join("uploads", filename);
+    try {
+      const { url } = await put(`uploads/${filename}`, file.buffer, {
+        access: "public",
+        addRandomSuffix: true,
+      });
+      storagePath = url;
+    } catch (error) {
+      console.error("Failed to upload file to Vercel Blob:", error);
+      throw new Error("Failed to upload file to storage");
     }
 
     // Save thumbnail if provided
     if (uploadData.thumbnailDataUrl) {
-      thumbnailPath = await this.saveThumbnail(
-        uploadData.thumbnailDataUrl,
-        assetId
-      );
+      thumbnailPath = await this.saveThumbnail(uploadData.thumbnailDataUrl, assetId);
     }
 
     const mediaAsset: Omit<MediaAsset, "_id"> = {
@@ -129,7 +122,7 @@ export class MediaAssetsService {
       fileSize: uploadData.fileSize,
       mimeType: uploadData.mimeType as any,
       type: this.getAssetType(uploadData.mimeType),
-      storageType: isProduction ? "vercel-blob" : "local",
+      storageType: "vercel-blob",
       storagePath,
       ...(thumbnailPath && { thumbnailPath }),
       ...(uploadData.duration && { duration: uploadData.duration }),
@@ -149,38 +142,21 @@ export class MediaAssetsService {
     } as MediaAsset;
   }
 
-  async getMediaAsset(
-    assetId: string,
-    userId: string
-  ): Promise<MediaAsset | null> {
+  async getMediaAsset(assetId: string, userId: string): Promise<MediaAsset | null> {
     const collection = await getMediaAssetsCollection();
     return await collection.findOne({ assetId, userId });
   }
 
-  async getProjectAllMediaAssets(
-    userId: string,
-    projectId: string
-  ): Promise<MediaAsset[]> {
+  async getProjectAllMediaAssets(userId: string, projectId: string): Promise<MediaAsset[]> {
     const collection = await getMediaAssetsCollection();
-    console.log(
-      "Fetching media assets for project:",
-      projectId,
-      "and user:",
-      userId
-    );
     if (!projectId || !userId) {
-      throw new Error(
-        "Incorrect parameters: projectId and userId are required"
-      );
+      throw new Error("Incorrect parameters: projectId and userId are required");
     }
 
-    return await collection.find({ userId }).sort({ uploadedAt: -1 }).toArray();
+    return await collection.find({ userId, projectId }).sort({ uploadedAt: -1 }).toArray();
   }
 
-  async getUserMediaAssets(
-    userId: string,
-    filter?: Partial<MediaAssetFilter>
-  ): Promise<MediaAsset[]> {
+  async getUserMediaAssets(userId: string, filter?: Partial<MediaAssetFilter>): Promise<MediaAsset[]> {
     const collection = await getMediaAssetsCollection();
 
     const query: any = { userId };
@@ -212,26 +188,10 @@ export class MediaAssetsService {
       return false;
     }
 
-    // Delete files from storage
-    const { uploadsDir } = this.getStorageConfig();
-
     try {
-      if (asset.storageType === "local") {
-        const filePath = path.join(process.cwd(), asset.storagePath);
-        await fs.unlink(filePath);
-
-        if (asset.thumbnailPath) {
-          const thumbnailFullPath = path.join(
-            process.cwd(),
-            asset.thumbnailPath
-          );
-          await fs.unlink(thumbnailFullPath);
-        }
-      }
-      // TODO: Handle Vercel Blob deletion for production
+      await del(`uploads/${asset.filename}`);
     } catch (error) {
       console.error("Failed to delete asset files:", error);
-      // Continue with database deletion even if file deletion fails
     }
 
     const result = await collection.deleteOne({ assetId, userId });
@@ -255,10 +215,7 @@ export class MediaAssetsService {
       updateData.processingError = processingError;
     }
 
-    const result = await collection.updateOne(
-      { assetId, userId },
-      { $set: updateData }
-    );
+    const result = await collection.updateOne({ assetId, userId }, { $set: updateData });
 
     return result.modifiedCount > 0;
   }

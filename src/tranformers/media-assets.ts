@@ -9,6 +9,11 @@ export interface MediaAssetResponse {
   uploadedAt: string;
   type: "video" | "image" | "audio";
   storagePath: string;
+  duration: number;
+  dimensions: {
+    width: number;
+    height: number;
+  } | null;
 }
 
 export class MediaAssetTransformer {
@@ -37,6 +42,8 @@ export class MediaAssetTransformer {
       uploadedAt: asset.uploadedAt.toISOString(),
       type: asset.type,
       storagePath: asset.storagePath,
+      duration: asset.duration || 0,
+      dimensions: asset.dimensions || null,
     };
   }
 }

@@ -6,6 +6,7 @@ import { generateToken } from "@/lib/jwt";
 import type { CreateUserInput, User } from "@/models";
 import { AuthenticatedRequest } from "../types/ApiResponse";
 
+// TODO: create schema for these actions as well
 export class AuthController extends BaseController {
   async signup(req: Request, res: Response): Promise<void> {
     try {
@@ -47,10 +48,9 @@ export class AuthController extends BaseController {
         email: email,
       });
 
-      // Set HTTP-only cookie
       res.cookie("authToken", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+        secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       });
