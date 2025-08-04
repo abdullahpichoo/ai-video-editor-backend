@@ -32,6 +32,7 @@ const timelineClipSchema = z.object({
       width: z.number().min(1),
       height: z.number().min(1),
     })
+    .nullable()
     .optional(),
   transform: z
     .object({

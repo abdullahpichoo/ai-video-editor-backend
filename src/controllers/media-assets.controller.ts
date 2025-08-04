@@ -1,9 +1,6 @@
 import { Request, Response } from "express";
 import { BaseController } from "./base.controller";
-import {
-  MediaAssetsService,
-  UploadMediaRequest,
-} from "@/services/media-assets.service";
+import { MediaAssetsService, UploadMediaRequest } from "@/services/media-assets.service";
 import {
   uploadMediaSchema,
   FILE_SIZE_LIMITS,
@@ -33,10 +30,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: any) => {
     if (file.size && file.size > maxSize) {
       const fileType = file.mimetype.split("/")[0];
       const maxSizeMB = Math.round(maxSize / (1024 * 1024));
-      cb(
-        new Error(`${fileType} file size cannot exceed ${maxSizeMB}MB`),
-        false
-      );
+      cb(new Error(`${fileType} file size cannot exceed ${maxSizeMB}MB`), false);
       return;
     }
     cb(null, true);
@@ -101,17 +95,12 @@ export class MediaController extends BaseController {
         return;
       }
 
-      const mediaAsset = await this.mediaService.createMediaAsset(
-        userId,
-        projectId,
-        metadata,
-        {
-          buffer: req.file.buffer,
-          originalname: req.file.originalname,
-          mimetype: req.file.mimetype,
-          size: req.file.size,
-        }
-      );
+      const mediaAsset = await this.mediaService.createMediaAsset(userId, projectId, metadata, {
+        buffer: req.file.buffer,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+      });
 
       this.created(res, {
         message: "Media asset uploaded successfully",
@@ -191,18 +180,13 @@ export class MediaController extends BaseController {
 
   async getProjectAssets(req: Request, res: Response): Promise<void> {
     try {
-      const authReq = req as AuthenticatedRequest;
-      const userId = authReq.userId;
       const { projectId } = req.params;
       if (!projectId) {
         this.badRequest(res, "Project ID is required");
         return;
       }
 
-      const assets = await this.mediaService.getProjectAllMediaAssets(
-        userId,
-        projectId
-      );
+      const assets = await this.mediaService.getProjectAllMediaAssets(projectId);
 
       this.success(res, {
         assets: MediaAssetTransformer.transformMany(assets),
@@ -220,8 +204,7 @@ export class MediaController extends BaseController {
       const userId = authReq.userId;
 
       // Parse query parameters for filtering
-      const { mimeType, isProcessing, uploadedAfter, uploadedBefore } =
-        req.query;
+      const { mimeType, isProcessing, uploadedAfter, uploadedBefore } = req.query;
 
       const filter: any = {};
 
@@ -314,10 +297,7 @@ export class MediaController extends BaseController {
       }
 
       if (asset.storageType !== "local") {
-        this.badRequest(
-          res,
-          "Asset streaming not available for this storage type"
-        );
+        this.badRequest(res, "Asset streaming not available for this storage type");
         return;
       }
 
@@ -339,10 +319,7 @@ export class MediaController extends BaseController {
           const chunksize = end - start + 1;
 
           res.status(206);
-          res.setHeader(
-            "Content-Range",
-            `bytes ${start}-${end}/${asset.fileSize}`
-          );
+          res.setHeader("Content-Range", `bytes ${start}-${end}/${asset.fileSize}`);
           res.setHeader("Content-Length", chunksize);
         }
       }

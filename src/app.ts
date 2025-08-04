@@ -3,7 +3,6 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import compression from "compression";
-import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import { config } from "@/config";
 import { errorHandler, notFound } from "@/middleware/error";

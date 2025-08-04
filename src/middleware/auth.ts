@@ -2,20 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "@/lib/jwt";
 import { AuthenticatedRequest } from "@/types/ApiResponse";
 
-export const authenticate = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   try {
     let token = req.cookies?.authToken;
-
-    if (!token) {
-      const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        token = authHeader.slice(7);
-      }
-    }
 
     if (!token) {
       res.status(401).json({

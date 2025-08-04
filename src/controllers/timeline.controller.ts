@@ -26,7 +26,7 @@ export class TimelineController extends BaseController {
       const timeline = await this.timelineService.getTimeline(projectId, userId);
 
       if (!timeline) {
-        this.notFound(res, "Timeline not found");
+        this.success(res, null);
         return;
       }
 
@@ -57,10 +57,7 @@ export class TimelineController extends BaseController {
       const timelineData = validationResult.data as UpdateTimelineRequest;
       const timeline = await this.timelineService.updateTimeline(projectId, userId, timelineData);
 
-      this.success(res, {
-        message: "Timeline updated successfully",
-        timeline,
-      });
+      this.success(res, timeline);
     } catch (error) {
       console.error("Update timeline error:", error);
       this.error(res, "Failed to update timeline");

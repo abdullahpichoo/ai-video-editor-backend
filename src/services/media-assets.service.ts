@@ -147,13 +147,10 @@ export class MediaAssetsService {
     return await collection.findOne({ assetId, userId });
   }
 
-  async getProjectAllMediaAssets(userId: string, projectId: string): Promise<MediaAsset[]> {
+  async getProjectAllMediaAssets(projectId: string): Promise<MediaAsset[]> {
     const collection = await getMediaAssetsCollection();
-    if (!projectId || !userId) {
-      throw new Error("Incorrect parameters: projectId and userId are required");
-    }
 
-    return await collection.find({ userId, projectId }).sort({ uploadedAt: -1 }).toArray();
+    return await collection.find({ projectId }).sort({ uploadedAt: -1 }).toArray();
   }
 
   async getUserMediaAssets(userId: string, filter?: Partial<MediaAssetFilter>): Promise<MediaAsset[]> {
