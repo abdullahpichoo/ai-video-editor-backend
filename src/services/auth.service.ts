@@ -3,7 +3,7 @@ import { getUsersCollection } from "@/lib/database";
 import { generateToken } from "@/lib/jwt";
 import { User } from "@/models";
 import { config } from "@/config";
-import { AuthResult, SigninRequest, SignupRequest } from "@/types/auth";
+import { AuthResult, SigninRequest, SignupRequest } from "@/types/auth.types";
 
 const USER_ALREADY_EXISTS = "User already exists";
 const INVALID_CREDENTIALS = "Invalid credentials";

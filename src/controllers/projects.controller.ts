@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { BaseController } from "./base.controller";
-import { AuthenticatedRequest } from "@/types/api-response";
+import { AuthenticatedRequest } from "@/types/api-response.types";
 import { ProjectsService } from "@/services/projects.service";
 import { createProjectSchema } from "@/routes/payload-validation/projects.validation";
-import { CreateProjectRequest } from "@/types/project";
+import { CreateProjectRequest } from "@/types/project.types";
 
 export class ProjectController extends BaseController {
   private projectService = new ProjectsService();

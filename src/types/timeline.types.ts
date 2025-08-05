@@ -1,4 +1,4 @@
-import { ITimelineTrack } from "@/models/Timeline";
+import { ITimelineTrack } from "@/models/timeline.model";
 
 export interface UpdateTimelineRequest {
   id: string;

@@ -1,9 +1,9 @@
 import { MediaAssetsService } from "@/services/media-assets.service";
-import { VideoProject } from "@/models/VideoProject";
+import { VideoProject } from "@/models/video-project.model";
 import { getVideoProjectsCollection } from "@/lib/database";
 import { ObjectId } from "mongodb";
 import { TimelineService } from "./timeline.service";
-import { CreateProjectRequest } from "@/types/project";
+import { CreateProjectRequest } from "@/types/project.types";
 
 const PROJECT_NOT_FOUND = "Project not found";
 
@@ -11,7 +11,8 @@ export class ProjectsService {
   async createProject(userId: string, data: CreateProjectRequest): Promise<VideoProject> {
     const collection = await getVideoProjectsCollection();
 
-    const project: Omit<VideoProject, "_id"> = {
+    const project: VideoProject = {
+      _id: new ObjectId(),
       userId,
       title: data.title,
       ...(data.description && { description: data.description }),
@@ -22,8 +23,8 @@ export class ProjectsService {
       lastOpenedAt: new Date(),
     };
 
-    const result = await collection.insertOne(project as VideoProject);
-    return { ...project, _id: result.insertedId } as VideoProject;
+    await collection.insertOne(project as VideoProject);
+    return project;
   }
 
   async getUserProjects(userId: string): Promise<VideoProject[]> {

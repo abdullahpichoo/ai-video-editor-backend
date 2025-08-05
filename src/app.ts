@@ -6,10 +6,11 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import { config } from "@/config";
 import { errorHandler, notFound } from "@/middleware/error";
-import { authRoutes } from "@/routes/auth";
-import { projectRoutes } from "@/routes/projects";
-import { mediaRoutes } from "@/routes/media-assets";
-import timelineRoutes from "@/routes/timeline";
+import { authRoutes } from "@/routes/auth.routes";
+import { projectRoutes } from "@/routes/projects.routes";
+import { mediaRoutes } from "@/routes/media-assets.routes";
+import timelineRoutes from "@/routes/timeline.routes";
+import aiJobRoutes from "@/routes/ai-jobs.routes";
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use("/api", authRoutes);
 app.use("/api", projectRoutes);
 app.use("/api", mediaRoutes);
 app.use("/api", timelineRoutes);
+app.use("/api", aiJobRoutes);
 
 app.use(notFound);
 

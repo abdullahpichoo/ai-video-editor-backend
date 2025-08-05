@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { HttpStatusCode } from "@/constants/HttpStatusCode";
-import { ApiResponse, AuthenticatedRequest } from "@/types/api-response";
+import { ApiResponse, AuthenticatedRequest } from "@/types/api-response.types";
 
 export abstract class BaseController {
   protected getUserId(request: AuthenticatedRequest): string {

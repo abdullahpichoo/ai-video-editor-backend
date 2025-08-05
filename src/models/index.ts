@@ -1,7 +1,7 @@
-export type { User } from "./User";
-export type { MediaAsset } from "./MediaAsset";
-export type { VideoProject } from "./VideoProject";
+export type { User } from "./user.model";
+export type { MediaAsset } from "./media-asset.model";
+export type { VideoProject } from "./video-project.model";
 
-export type { ITimelineTrack, ITimelineClip } from "./Timeline";
+export type { ITimelineTrack, ITimelineClip } from "./timeline.model";
 
-export type { CollectionName } from "./Types";
+export type { CollectionName } from "./types";

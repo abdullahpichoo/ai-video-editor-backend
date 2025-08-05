@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import { BaseController } from "./base.controller";
 import { TimelineService } from "@/services/timeline.service";
 import { updateTimelineSchema } from "@/routes/payload-validation/timeline.validation";
-import { AuthenticatedRequest } from "@/types/api-response";
-import { UpdateTimelineRequest } from "@/types/timeline";
+import { AuthenticatedRequest } from "@/types/api-response.types";
+import { UpdateTimelineRequest } from "@/types/timeline.types";
 
 export class TimelineController extends BaseController {
   private timelineService = new TimelineService();

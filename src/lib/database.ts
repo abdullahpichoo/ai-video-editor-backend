@@ -1,7 +1,8 @@
 import { MongoClient, Db, Collection, Document } from "mongodb";
 import { config } from "@/config";
 import type { User, MediaAsset, VideoProject, CollectionName } from "@/models";
-import type { ITimeline } from "@/models/Timeline";
+import type { ITimeline } from "@/models/timeline.model";
+import type { AIJob } from "@/models/ai-job.model";
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
@@ -56,19 +57,15 @@ export async function getTimelinesCollection(): Promise<Collection<ITimeline>> {
   return getCollection<ITimeline>("timelines");
 }
 
+export async function getJobsCollection(): Promise<Collection<AIJob>> {
+  return getCollection<AIJob>("aiProcessingJobs");
+}
+
 export async function initializeDatabase(): Promise<void> {
   try {
     const { db } = await connectToDatabase();
 
     await db.collection("users").createIndexes([{ key: { email: 1 }, unique: true }, { key: { createdAt: 1 } }]);
-
-    await db
-      .collection("userSessions")
-      .createIndexes([
-        { key: { userId: 1 } },
-        { key: { sessionToken: 1 }, unique: true },
-        { key: { expires: 1 }, expireAfterSeconds: 0 },
-      ]);
 
     await db
       .collection("mediaAssets")
@@ -85,7 +82,6 @@ export async function initializeDatabase(): Promise<void> {
       .collection("videoProjects")
       .createIndexes([
         { key: { userId: 1 } },
-        { key: { projectId: 1 }, unique: true },
         { key: { userId: 1, updatedAt: -1 } },
         { key: { userId: 1, lastOpenedAt: -1 } },
       ]);

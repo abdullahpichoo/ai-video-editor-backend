@@ -1,7 +1,7 @@
 import { Collection, ObjectId } from "mongodb";
-import { ITimeline, ITimelineTrack, ITimelineClip } from "@/models/Timeline";
+import { ITimeline, ITimelineTrack, ITimelineClip } from "@/models/timeline.model";
 import { getTimelinesCollection } from "@/lib/database";
-import { UpdateTimelineRequest } from "@/types/timeline";
+import { UpdateTimelineRequest } from "@/types/timeline.types";
 
 export class TimelineService {
   async getTimeline(projectId: string): Promise<ITimeline | null> {
@@ -23,6 +23,11 @@ export class TimelineService {
   async deleteTimeline(projectId: string): Promise<void> {
     const collection = await getTimelinesCollection();
     await collection.deleteOne({ projectId });
+  }
+
+  async deleteTimelineEntriesByAssetId(assetId: string): Promise<void> {
+    const collection = await getTimelinesCollection();
+    await collection.updateMany({ "tracks.clips.assetId": assetId }, { $pull: { tracks: { clips: { assetId } } } });
   }
 
   private async updateExistingTimeline(

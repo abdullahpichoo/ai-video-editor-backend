@@ -4,7 +4,9 @@ import path from "path";
 import { config } from "@/config";
 import { del, put } from "@vercel/blob";
 import { MediaAsset } from "@/models";
-import { UploadMediaRequest } from "@/types/media-assets";
+import { UploadMediaRequest } from "@/types/media-assets.types";
+import { JobService } from "./job.service";
+import { TimelineService } from "./timeline.service";
 
 export class MediaAssetsService {
   async createMediaAsset(
@@ -99,6 +101,13 @@ export class MediaAssetsService {
     }
 
     const result = await collection.deleteOne({ assetId, userId });
+
+    const jobService = new JobService();
+    await jobService.deleteJobsByAssetId(assetId);
+
+    const timelineService = new TimelineService();
+    await timelineService.deleteTimelineEntriesByAssetId(assetId);
+
     return result.deletedCount > 0;
   }
 

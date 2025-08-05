@@ -6,11 +6,11 @@ import {
   FILE_SIZE_LIMITS,
   getMaxFileSize,
 } from "@/routes/payload-validation/media-assets.validation";
-import { AuthenticatedRequest } from "@/types/api-response";
+import { AuthenticatedRequest } from "@/types/api-response.types";
 import multer from "multer";
 import path from "path";
-import { MediaAssetTransformer } from "@/tranformers/media-assets";
-import { UploadMediaRequest } from "@/types/media-assets";
+import { MediaAssetTransformer } from "@/tranformers/media-assets.transformer";
+import { UploadMediaRequest } from "@/types/media-assets.types";
 
 const storage = multer.memoryStorage();
 
